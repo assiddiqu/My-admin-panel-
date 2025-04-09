@@ -90,13 +90,14 @@
   <script>
     // REPLACE WITH YOUR FIREBASE CONFIG
     const firebaseConfig = {
-      apiKey: "AIzaSyCFzPbeQBfKukHIUqGguzfDy5KGNL64nPs",
-      authDomain: "sr-studio-b1211.firebaseapp.com",
-      projectId: "sr-studio-b1211",
-      storageBucket: "sr-studio-b1211.firebasestorage.app",
-      messagingSenderId: "391024530317",
-      appId: "1:391024530317:web:a3c1acb265bce88b86a3c4"
-    };
+  apiKey: "AIzaSyCFzPbeQBfKukHIUqGguzfDy5KGNL64nPs",
+  authDomain: "sr-studio-b1211.firebaseapp.com",
+  projectId: "sr-studio-b1211",
+  storageBucket: "sr-studio-b1211.appspot.com", // <-- FIXED THIS
+  messagingSenderId: "391024530317",
+  appId: "1:391024530317:web:a3c1acb265bce88b86a3c4"
+};
+
 
     firebase.initializeApp(firebaseConfig);
     const storage = firebase.storage();
