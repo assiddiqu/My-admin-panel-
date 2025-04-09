@@ -3,34 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SR STUDIO</title>
+  <title>SR STUDIO UPLOADER SITE</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f0f4ff;
+      background: #f4f8ff;
       padding: 30px;
     }
 
     .container {
       max-width: 700px;
-      background: #fff;
-      padding: 20px;
       margin: auto;
+      background: white;
+      padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    h2, h1 {
-      text-align: center;
-      color: #333;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
     input[type="text"], input[type="file"], input[type="password"] {
       width: 100%;
-      margin: 10px 0;
       padding: 10px;
-      border: 1px solid #ccc;
+      margin: 10px 0;
       border-radius: 6px;
+      border: 1px solid #ccc;
     }
 
     button {
@@ -40,31 +35,22 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      margin-top: 10px;
-    }
-
-    .file-list, .admin-panel {
-      margin-top: 20px;
+      margin-bottom: 20px;
     }
 
     .file-item {
-      background: #f1f7ff;
-      margin-bottom: 10px;
+      background: #eef4ff;
       padding: 10px;
+      margin-bottom: 10px;
       border-radius: 6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .file-item span {
-      flex: 1;
-    }
-
     .file-item a {
       text-decoration: none;
-      color: #0066cc;
-      margin-left: 10px;
+      color: #0077cc;
     }
 
     .hidden {
@@ -74,102 +60,124 @@
 </head>
 <body>
   <div class="container">
-    <h1>SR TECH UPLOADER SITE</h1>
+    <h1>SR STUDIO</h1>
     <p>Active Users: <span id="activeUsers">0</span></p>
 
-    <input type="text" id="title" placeholder="Enter file title..." />
+    <input type="text" id="title" placeholder="Enter file title" />
     <input type="file" id="fileInput" />
     <button onclick="uploadFile()">Upload</button>
 
     <h2>All Posts</h2>
-    <div class="file-list" id="fileList"></div>
+    <div id="fileList"></div>
 
     <div id="adminLogin">
-      <h2>SR HUB INDUSTRY</h2>
+      <h2>LONLY SR LOGIN</h2>
       <input type="password" id="adminPassword" placeholder="Enter admin password" />
       <button onclick="loginAdmin()">Login</button>
     </div>
 
-    <div id="adminPanel" class="admin-panel hidden">
-      <h2>SR ONLY LOGIN</h2>
+    <div id="adminPanel" class="hidden">
+      <h2>SR LOGIN</h2>
       <div id="adminFiles"></div>
     </div>
   </div>
 
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
   <script>
-    let uploads = JSON.parse(localStorage.getItem("uploads") || "[]");
+    // REPLACE WITH YOUR FIREBASE CONFIG
+    const firebaseConfig = {
+      apiKey: "AIzaSyCFzPbeQBfKukHIUqGguzfDy5KGNL64nPs",
+      authDomain: "sr-studio-b1211.firebaseapp.com",
+      projectId: "sr-studio-b1211",
+      storageBucket: "sr-studio-b1211.firebasestorage.app",
+      messagingSenderId: "391024530317",
+      appId: "1:391024530317:web:a3c1acb265bce88b86a3c4"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const storage = firebase.storage();
+    const db = firebase.firestore();
 
     function simulateActiveUsers() {
-      let count = Math.floor(Math.random() * 100) + 1;
-      document.getElementById("activeUsers").innerText = count;
+      document.getElementById("activeUsers").innerText = Math.floor(Math.random() * 50) + 1;
     }
 
     function uploadFile() {
       const title = document.getElementById("title").value;
       const file = document.getElementById("fileInput").files[0];
+
       if (!title || !file) {
-        alert("Please enter a title and select a file.");
+        alert("Please provide both title and file.");
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const fileData = {
-          id: Date.now(),
+      const storageRef = storage.ref('uploads/' + Date.now() + '_' + file.name);
+      storageRef.put(file).then(snapshot => {
+        return snapshot.ref.getDownloadURL();
+      }).then(url => {
+        return db.collection("uploads").add({
           title: title,
           fileName: file.name,
-          fileURL: e.target.result
-        };
-        uploads.push(fileData);
-        localStorage.setItem("uploads", JSON.stringify(uploads));
-        renderUploads();
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function renderUploads() {
-      const list = document.getElementById("fileList");
-      const admin = document.getElementById("adminFiles");
-      list.innerHTML = "";
-      admin.innerHTML = "";
-
-      uploads.forEach(upload => {
-        const item = document.createElement("div");
-        item.className = "file-item";
-        item.innerHTML = `
-          <span>${upload.title}</span>
-          <a href="${upload.fileURL}" download="${upload.fileName}">Download</a>
-        `;
-        list.appendChild(item);
-
-        const adminItem = document.createElement("div");
-        adminItem.className = "file-item";
-        adminItem.innerHTML = `
-          <span>${upload.title}</span>
-          <button onclick="deletePost(${upload.id})">Delete</button>
-        `;
-        admin.appendChild(adminItem);
+          fileURL: url,
+          timestamp: Date.now()
+        });
+      }).then(() => {
+        alert("Uploaded successfully!");
+        document.getElementById("title").value = "";
+        document.getElementById("fileInput").value = "";
+        fetchPosts();
+      }).catch(error => {
+        alert("Error: " + error.message);
       });
     }
 
-    function deletePost(id) {
-      uploads = uploads.filter(u => u.id !== id);
-      localStorage.setItem("uploads", JSON.stringify(uploads));
-      renderUploads();
+    function fetchPosts() {
+      const fileList = document.getElementById("fileList");
+      const adminFiles = document.getElementById("adminFiles");
+      fileList.innerHTML = "";
+      adminFiles.innerHTML = "";
+
+      db.collection("uploads").orderBy("timestamp", "desc").get().then(snapshot => {
+        snapshot.forEach(doc => {
+          const data = doc.data();
+
+          const item = document.createElement("div");
+          item.className = "file-item";
+          item.innerHTML = `<span>${data.title}</span> <a href="${data.fileURL}" download="${data.fileName}">Download</a>`;
+          fileList.appendChild(item);
+
+          const adminItem = document.createElement("div");
+          adminItem.className = "file-item";
+          adminItem.innerHTML = `<span>${data.title}</span> <button onclick="deletePost('${doc.id}')">Delete</button>`;
+          adminFiles.appendChild(adminItem);
+        });
+      });
     }
 
     function loginAdmin() {
       const password = document.getElementById("adminPassword").value;
       if (password === "zainkhan@1234khan") {
-        document.getElementById("adminPanel").classList.remove("hidden");
         document.getElementById("adminLogin").classList.add("hidden");
+        document.getElementById("adminPanel").classList.remove("hidden");
       } else {
-        alert("Incorrect password");
+        alert("Wrong password!");
+      }
+    }
+
+    function deletePost(docId) {
+      if (confirm("Delete this post?")) {
+        db.collection("uploads").doc(docId).delete().then(() => {
+          fetchPosts();
+        });
       }
     }
 
     simulateActiveUsers();
-    renderUploads();
+    fetchPosts();
   </script>
 </body>
 </html>
